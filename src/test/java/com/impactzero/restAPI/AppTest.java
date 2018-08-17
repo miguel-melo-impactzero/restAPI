@@ -2,22 +2,18 @@ package com.impactzero.restAPI;
 
 import com.impactzero.restAPI.Classes.User;
 import com.impactzero.restAPI.Repositories.UserRepository;
+import org.h2.jdbc.JdbcSQLException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.junit4.SpringRunner;
-
 import javax.persistence.PersistenceException;
-import javax.validation.ConstraintViolationException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @RunWith(SpringRunner.class)
 @DataJpaTest
@@ -31,6 +27,8 @@ public class AppTest {
 
     private User testuser;
     private User newuser;
+    private User invalidUsernameUser;
+    private User invalidEmailUser;
 
     @Test
     public void createUser(){
@@ -48,19 +46,41 @@ public class AppTest {
     @Test
     public void updateUser(){
 
-//        try{
+        //Declaration of user instance
+        User testuser = new User();
 
-            //Declaration of 3 users : 1 valid and 2 invalid
-            User testuser = new User();
-            User invalidEmailUser = new User();
-            User invalidUsernameUser = new User();
+        //Insert the testuser into the local DB
+        entityManager.persistAndFlush(testuser);
 
-            //Set duplicate fields that are unique
-//            invalidEmailUser.setEmail("New testuser email");
-//            invalidUsernameUser.setUsername("New testuser username");
+        //Change the instance variables
+        testuser.setName("New testuser name");
+        testuser.setUsername("New testuser username");
+        testuser.setPassword("New testuser password");
+        testuser.setEmail("New testuser email");
+
+        //Insert data into the database
+        entityManager.persistAndFlush(testuser);
+
+        //Find the user inserted on the repository and instanciated another user with the data fetched
+        User newuser = userRepository.findByName("New testuser name");
+
+        //Compare both instances
+        assertTrue(testuser.equals(newuser));
+
+    }
+
+    @Test
+    public void updateWithConstraintsViolation() {
+
+        //Declaration of 3 users : 1 valid and 2 invalid
+        User testuser = new User();
+        User invalidEmailUser = new User();
+        User invalidUsernameUser = new User();
+
+        try {
 
             //Insert the testuser into the local DB
-            entityManager.persistAndFlush(testuser);
+            entityManager.persist(testuser);
 
             //Change the instance variables and insert all 3 users into the DB
             testuser.setName("New testuser name");
@@ -68,44 +88,58 @@ public class AppTest {
             testuser.setPassword("New testuser password");
             testuser.setEmail("New testuser email");
 
+
+            //Set duplicate fields that are unique
+            invalidEmailUser.setEmail("New testuser email");
+            invalidUsernameUser.setUsername("New testuser username");
+
+            //Insert the 3 users into the DB
             entityManager.persist(testuser);
             entityManager.persist(invalidEmailUser);
             entityManager.persist(invalidUsernameUser);
-
             entityManager.flush();
 
-//        }catch(PersistenceException e){
+        }catch(PersistenceException e){
 
-//            Throwable t = e.getCause();
-//            while ((t != null) && !(t instanceof ConstraintViolationException)) {
-//                t = t.getCause();
-//            }
-//            if (t instanceof ConstraintViolationException) {
-//                assertTrue(true);
-//            }
-//        }
+            Throwable t = e.getCause();
 
+            //Cicle through the Exception causes until a JdbcSQLException is found
+            while ((t != null) && !(t instanceof JdbcSQLException)) {
 
+                t = t.getCause();
 
+            }
 
-        User newuser = userRepository.findByName("New testuser name");
+            //Check if a JdbcSQLException was found.
+            //If yes then the unique constraint violation was caught successfully.
+            //If no then the exception was not caught eventhough there is one, resulting in a failed test.
+            if (t instanceof JdbcSQLException) {
 
-        assertTrue(testuser.equals(newuser) &&
-                             newuser.getName().equals("New testuser name") &&
-                             newuser.getUsername().equals("New testuser username") &&
-                             newuser.getPassword().equals("New testuser password") &&
-                             newuser.getEmail().equals("New testuser email")
-        );
+                assertTrue(true);
 
+            }else{
+
+                fail();
+
+            }
+
+        }
     }
 
     @Test
     public void deleteUser(){
 
+        //Create user and insert into DB
         User testuser = new User("To delete", "To delete", "To delete", "To delete");
-        entityManager.flush();
+        entityManager.persistAndFlush(testuser);
+
+        //Check if user is in the DB
+        assertFalse(!(testuser.equals(userRepository.findByName("To delete"))));
+
+        //Remove user from DB
         entityManager.remove(testuser);
 
+        //If user was deleted, user repo has no user with that name, returning null
         assertNull(userRepository.findByName("To delete"));
 
     }

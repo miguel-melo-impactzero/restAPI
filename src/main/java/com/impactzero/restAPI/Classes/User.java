@@ -1,5 +1,7 @@
 package com.impactzero.restAPI.Classes;
 
+import com.google.gson.Gson;
+
 import javax.persistence.*;
 
 //Class purpose: Declare Table User and its fields
@@ -46,7 +48,7 @@ public class User{
     }
 
     //Constructor with all params to receive data from mySQL
-    public User(int id, String name, String username, String password, String email){
+    public User(long id, String name, String username, String password, String email){
 
         this.id = id;
         this.name = name;
@@ -55,7 +57,6 @@ public class User{
         this.email = email;
 
     }
-
 
     //Getters and Setters
     public long getId() {
@@ -120,7 +121,7 @@ public class User{
 
     public boolean equals(User user){
         if(
-            this.getName().equals(user.getName()) &&
+            this.getName().equals(user.getName())  &&
             this.getUsername().equals(user.getUsername()) &&
             this.getPassword().equals(user.getPassword()) &&
             this.getEmail().equals(user.getEmail())
@@ -129,5 +130,41 @@ public class User{
         }else{
             return false;
         }
+    }
+
+    public boolean equals(User user,String op){
+
+        if(op.equals("update")){
+
+            if(
+                (this.getName().equals(user.getName()) || this.getName() == null || user.getName() == null) &&
+                (this.getUsername().equals(user.getUsername()) || this.getUsername() == null || user.getUsername() == null) &&
+                (this.getPassword().equals(user.getPassword()) || this.getPassword() == null || user.getPassword() == null) &&
+                (this.getEmail().equals(user.getEmail()) || this.getEmail() == null || user.getEmail() == null)
+            ){
+                return true;
+            }else{
+                return false;
+            }
+        }
+        return false;
+    }
+
+    public String toJSON() {
+        return new Gson().toJson(this);
+    }
+
+    public User fromJSON(String json){
+        return new Gson().fromJson(json,User.class);
+    }
+
+    @Override
+    public String toString(){
+        return new String(  "Id :"+this.getId()+"\n"+
+                                    "Nome :"+this.getName()+"\n"+
+                                    "Username :"+this.getUsername()+"\n"+
+                                    "Password :"+this.getPassword()+"\n"+
+                                    "Email :"+this.getEmail()+"\n"
+        );
     }
 }

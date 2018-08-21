@@ -1,7 +1,5 @@
 package com.impactzero.restAPI;
 
-
-
 import com.impactzero.restAPI.Classes.User;
 import com.impactzero.restAPI.Repositories.UserRepository;
 
@@ -9,6 +7,7 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,8 +16,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-
-
 
 import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -72,6 +69,7 @@ public class MVCtest {
 
 
     @Test
+    @DependsOn(value = "acreateUserOnDB")
     public void bupdateUserOnDB() throws Exception {
 
         System.out.println("\n\n\nUPDATE NEW USER WITH SUCCESS---------------------------\n\n\n");
@@ -94,6 +92,7 @@ public class MVCtest {
     }
 
     @Test
+    @DependsOn(value = "acreateUserOnDB")
     public void cupdateUserOnDB_WithSameData() throws Exception {
 
         System.out.println("\n\n\nUPDATE USER WITH SAME DATA( NO OPERATION IS DONE )---------------------------\n\n\n");
@@ -116,6 +115,7 @@ public class MVCtest {
     }
 
     @Test
+    @DependsOn(value = "acreateUserOnDB")
     public void dupdateUserOnDB_WithUsername_ConstraintViolation() throws Exception {
 
         System.out.println("\n\n\nCREATE NEW USER---------------------------\n\n\n");
@@ -158,6 +158,7 @@ public class MVCtest {
 
 
     @Test
+    @DependsOn(value = "acreateUserOnDB")
     public void eupdateUserOnDB_WithEmail_ConstraintViolation() throws Exception {
 
         System.out.println("\n\n\nUPDATE WITH BAD EMAIL---------------------------\n\n\n");
@@ -179,7 +180,7 @@ public class MVCtest {
     }
 
     @Test
-//    @DependsOn(value = "createUserOnDB")
+    @DependsOn(value = "acreateUserOnDB")
     public void fupdateUserOnDB_WithUsername_And_Email_ConstraintViolation() throws Exception {
 
         System.out.println("\n\n\nUPDATE WITH BAD USERNAME AND EMAIL---------------------------\n\n\n");
@@ -202,16 +203,19 @@ public class MVCtest {
     }
 
 
-//    @Test
-//    @DependsOn(value = "createUserOnDB")
-//    public void zdeleteUserOnDB() throws Exception {
-//
-//        mvc.perform(post("http://localhost/user/delete")
-//                .param("id", "0")
-//                .contentType(MediaType.APPLICATION_JSON))
-//
-//        .andExpect(status().isOk())
-//        .andExpect(content().string("User apagado com sucesso."));
-//
-//    }
+    @Test
+    @DependsOn(value = "acreateUserOnDB")
+    public void zdeleteUserOnDB() throws Exception {
+
+        System.out.println("\n\n\nDELETE USER IN DB ---------------------------\n\n\n");
+
+        mvc.perform(post("http://localhost/user/delete")
+                .param("id", "1")
+                .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(content().string("User apagado com sucesso."))
+        .andReturn();
+
+    }
 }

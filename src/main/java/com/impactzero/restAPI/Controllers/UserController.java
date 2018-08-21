@@ -33,11 +33,10 @@ public class UserController{
         User current = new User(name,username,password,email);
 
         try{
-            userRepository.save(current);
+            return userRepository.save(current);
         }catch(Exception e){
             throw new Exception(e.getClass().toString() + " : " + e.getMessage());
         }
-        return userRepository.findByUsername(username);
 
     }
 
